@@ -1,58 +1,52 @@
 from gensim.models import KeyedVectors
 from scipy.spatial.distance import cosine
-import numpy as np
-
+from itertools import combinations
 
 def load_model():
-    # Load a pre-trained Word2Vec model (GoogleNews-vectors is common but large)
-    # Example: download the model from https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz
     print("Loading model... This may take a while.")
-    model_path = 'path/to/GoogleNews-vectors-negative300.bin'  # Update this path
+    model_path = './embeddings/GoogleNews-vectors-negative300.bin'  # Update this path
     word_vectors = KeyedVectors.load_word2vec_format(model_path, binary=True)
     print("Model loaded successfully.")
     return word_vectors
 
+def calculate_group_similarity(group, word_vectors):
+    # Calculate the sum of cosine similarities for each pair in the group
+    similarity_sum = 0
+    for word1, word2 in combinations(group, 2):
+        sim = 1 - cosine(word_vectors[word1], word_vectors[word2])
+        similarity_sum += sim
+    return similarity_sum
 
-def get_closest_words(word_list, word_vectors, top_n=4):
+def get_top_n_sets(word_list, word_vectors, top_n_sets=3, group_size=4):
     # Filter out words not in the model's vocabulary
     valid_words = [word for word in word_list if word in word_vectors]
-    if len(valid_words) < top_n:
+    if len(valid_words) < group_size:
         print(f"Not enough valid words in the model's vocabulary (found {len(valid_words)}).")
         return []
 
-    # Compute pairwise cosine similarities
-    similarities = {}
-    for i, word1 in enumerate(valid_words):
-        for j, word2 in enumerate(valid_words):
-            if i < j:  # Avoid redundant calculations
-                sim = 1 - cosine(word_vectors[word1], word_vectors[word2])
-                similarities[(word1, word2)] = sim
+    # Generate all possible combinations of 4 words and calculate similarity scores
+    group_similarities = []
+    for group in combinations(valid_words, group_size):
+        similarity_sum = calculate_group_similarity(group, word_vectors)
+        group_similarities.append((group, similarity_sum))
 
-    # Sort pairs by similarity in descending order and get top pairs
-    closest_pairs = sorted(similarities.items(), key=lambda item: item[1], reverse=True)[:top_n]
-
-    # Flatten the pairs and deduplicate the words to get top unique words
-    closest_words = list(set([word for pair, _ in closest_pairs for word in pair]))
-    return closest_words[:top_n]
-
+    # Sort groups by cumulative similarity score in descending order and get the top sets
+    top_groups = sorted(group_similarities, key=lambda item: item[1], reverse=True)[:top_n_sets]
+    return top_groups
 
 def main():
     # Load the model
     word_vectors = load_model()
 
-    # Take 16 words as input from the user
-    words = input("Enter 16 words, separated by commas: ").strip().split(',')
+    # Use a predefined list of 16 words
+    words = ["grain", "total", "cube", "syrup", "signature",
+             "tax", "powder", "tip"]
     words = [word.strip().lower() for word in words if word.strip()]
 
-    if len(words) != 16:
-        print("Please enter exactly 16 words.")
-        return
-
-    # Find and output the 4 closest words
-    closest_words = get_closest_words(words, word_vectors)
-    if closest_words:
-        print("The 4 closest words are:", closest_words)
-
+    # Find and output the top 3 sets of 4 closest words
+    top_sets = get_top_n_sets(words, word_vectors, top_n_sets=3, group_size=4)
+    for i, (group, score) in enumerate(top_sets, 1):
+        print(f"Set {i}: Words = {group}, Similarity Score = {score:.4f}")
 
 if __name__ == "__main__":
     main()
