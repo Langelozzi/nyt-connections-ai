@@ -58,7 +58,7 @@ def main():
     words = load_words(word_file)
 
     # Find and output the top 3 sets of 4 closest words
-    top_sets = get_top_n_sets(words, word_vectors, top_n_sets=5, group_size=4)
+    top_sets = get_top_n_sets(words, word_vectors, top_n_sets=10, group_size=4)
     for i, (group, score) in enumerate(top_sets, 1):
         print(f"Set {i}: Words = {group}, Similarity Score = {score:.4f}")
 
