@@ -46,7 +46,7 @@ for index, row in data.iterrows():
     while len(answer_indices) < 4:
         answer_indices.append(-1)  # Use -1 to indicate missing values
 
-    X.append(puzzle_embedding)
+    X.append(puzzle_embedding) 
     y.append(answer_indices)
 
 # Convert lists to numpy arrays
