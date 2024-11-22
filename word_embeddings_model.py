@@ -50,3 +50,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+words_to_predict = ["groove", "jam", "rock", "shred", "drain", "empty", "exhaust",
+                    "sap", "signature", "tax", "tip", "total", "cube", "grain", "powder", "syrup"]
