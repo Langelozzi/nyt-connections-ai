@@ -103,11 +103,13 @@ def main():
     #     print(f"Set {i}: Words = {group}, Similarity Score = {score:.4f}")
 
     # Evaluate model
+    n = 10
     connections_answers = pd.read_csv('data/connection_answers_aggregate.csv')
     predictor_func = lambda word_input: predictor(word_input, word_vectors)
     evaluator = ConnectionsEvaluator(predictor_func)
-    accuracy = evaluator.evaluate(connections_answers[:2])
-    print(f"Accuracy: {accuracy}")
+    accuracy, connections_made = evaluator.evaluate(connections_answers[:n])
+    print(f"Number of connections made: {connections_made}/{4 * n}")
+    print(f"Win percent: {accuracy}%")
 
 
 if __name__ == "__main__":

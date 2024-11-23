@@ -9,22 +9,25 @@ class ConnectionsEvaluator:
     def __init__(self, predictor_func: Callable[[list[str]], list[list[str]]]):
         self._predictor_func = predictor_func
 
-    def evaluate(self, test_set: pd.DataFrame) -> float:
+    def evaluate(self, test_set: pd.DataFrame) -> tuple[float, int]:
         # Currently only evaluating if the top answer is correct
         x, y = self.__split_x_y(test_set)
 
         results = []
+        total_connections_made = 0
         for input_words, output_words in zip(x, y):
             formatted_input = self.__csv_input_to_list(input_words)
             actual_output = self.__csv_output_to_list(output_words)
 
             mistakes_left, answers_missed = self.evaluate_puzzle(formatted_input, actual_output)
+            num_connections_made = 4 - len(answers_missed)
+            total_connections_made += num_connections_made
             is_correct = mistakes_left > 0
 
             results.append(is_correct)
 
         prediction_rate = sum(results) / len(results)
-        return prediction_rate
+        return prediction_rate, total_connections_made
 
     def evaluate_puzzle(self, input_words: list[str], actual_outputs: list[list[str]]) -> tuple[int, list[list[str]]]:
         mistakes_left = 4
