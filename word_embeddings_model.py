@@ -1,14 +1,36 @@
 from gensim.models import KeyedVectors
 from scipy.spatial.distance import cosine
 from itertools import combinations
+from connections_evaluator import ConnectionsEvaluator
+import pandas as pd
 
 
-def load_model():
+def load_model(model_path):
     print("Loading model... This may take a while.")
-    model_path = './embeddings/GoogleNews-vectors-negative300.bin'  # Update this path
     word_vectors = KeyedVectors.load_word2vec_format(model_path, binary=True)
     print("Model loaded successfully.")
     return word_vectors
+
+
+def truncate_model():
+    # Path to the full pretrained Word2Vec file
+    original_model_path = './embeddings/GoogleNews-vectors-negative300.bin'
+
+    # Limit to the top N words (e.g., 500,000)
+    N = 500000
+
+    # Path to save the truncated model
+    truncated_model_path = f'./embeddings/GoogleNews-vectors-negative300-{N}.bin'
+
+    # Load the model with the limit
+    print(f"Loading the top {N} words from the Word2Vec model...")
+    word_vectors = KeyedVectors.load_word2vec_format(original_model_path, binary=True, limit=N)
+    print(f"Loaded {len(word_vectors)} words.")
+
+    # Save the truncated model back to disk
+    print(f"Saving the truncated model to {truncated_model_path}...")
+    word_vectors.save_word2vec_format(truncated_model_path, binary=True)
+    print("Truncated model saved successfully.")
 
 
 def calculate_group_similarity(group, word_vectors):
@@ -49,18 +71,43 @@ def load_words(filename):
     return words
 
 
+def predictor(input_words: list[str], word_vectors) -> list[list[str]]:
+    top_answers: list[tuple[tuple[str], float]] = get_top_n_sets(input_words, word_vectors, top_n_sets=4, group_size=4)
+    return [list(predicted_words) for predicted_words, _ in top_answers]
+
+
+def build_aggregate_connections_answers(input_file):
+    output_file = "data/connection_answers_aggregate.csv"
+
+    df = pd.read_csv(input_file)
+
+    # Group by 'Puzzle' and collect all 'Answer' values into a list
+    transformed_df = df.groupby("Puzzle")["Answer"].apply(list).reset_index()
+
+    # Save the transformed DataFrame to a new CSV
+    transformed_df.to_csv(output_file, index=False)
+
+
 def main():
     # Load the model
-    word_vectors = load_model()
+    model_path = './embeddings/GoogleNews-vectors-negative300-500000.bin'  # Update this path
+    word_vectors = load_model(model_path)
 
     # Load predefined list of words
     word_file = "words.txt"
     words = load_words(word_file)
 
-    # Find and output the top 3 sets of 4 closest words
-    top_sets = get_top_n_sets(words, word_vectors, top_n_sets=10, group_size=4)
-    for i, (group, score) in enumerate(top_sets, 1):
-        print(f"Set {i}: Words = {group}, Similarity Score = {score:.4f}")
+    # Find and output the top sets of 4 closest words
+    # top_sets = get_top_n_sets(words, word_vectors, top_n_sets=10, group_size=4)
+    # for i, (group, score) in enumerate(top_sets, 1):
+    #     print(f"Set {i}: Words = {group}, Similarity Score = {score:.4f}")
+
+    # Evaluate model
+    connections_answers = pd.read_csv('data/connection_answers_aggregate.csv')
+    predictor_func = lambda word_input: predictor(word_input, word_vectors)
+    evaluator = ConnectionsEvaluator(predictor_func)
+    accuracy = evaluator.evaluate(connections_answers[:2])
+    print(f"Accuracy: {accuracy}")
 
 
 if __name__ == "__main__":
