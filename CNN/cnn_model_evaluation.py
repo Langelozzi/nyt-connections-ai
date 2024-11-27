@@ -1,12 +1,10 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from connections_evaluator import ConnectionsEvaluator
 from gensim.models import KeyedVectors
 import pandas as pd
 import numpy as np
 from word_embeddings_model import load_words
-from cnn_model import ConnectionsCNN
+
 
 # CNN predictor function
 def cnn_predictor(input_words: list[str], model, word_vectors, top_n=4) -> list[list[str]]:
@@ -123,9 +121,9 @@ def main():
     Main method for selecting and running the desired functionality.
     """
     # Paths to resources
-    word_file = "words.txt"
-    test_data_path = "data/connection_answers_aggregate.csv"
-    model_path = './GoogleNews-vectors-negative300.bin'
+    word_file = "../words.txt"
+    test_data_path = "../data/connection_answers_aggregate.csv"
+    model_path = '../GoogleNews-vectors-negative300.bin'
     cnn_model_path = "cnn_model.pth"
 
     # User input to select functionality

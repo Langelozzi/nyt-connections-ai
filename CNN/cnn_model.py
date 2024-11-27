@@ -107,8 +107,8 @@ def train_cnn(data_path, model_path, save_model_path, num_epochs=20, batch_size=
 # Main Function
 if __name__ == "__main__":
     # Paths to resources
-    data_path = "data/connection_answers_aggregate.csv"
-    model_path = './GoogleNews-vectors-negative300.bin'
+    data_path = "../data/connection_answers_aggregate.csv"
+    model_path = '../GoogleNews-vectors-negative300.bin'
     save_model_path = "cnn_model.pth"
 
     # Train the model
