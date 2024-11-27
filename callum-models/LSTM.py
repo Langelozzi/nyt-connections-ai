@@ -100,7 +100,7 @@ def predict_answer(puzzle):
 
 
 # Example usage
-new_puzzle = "Dog,Apple,Red,Soccer,Basketball,Green,Elephant,Blue,Grape,Yellow,Cat,Banana,Baseball,Orange,Lion,Tennis"
+new_puzzle = "discount,bonus,animal,eloise,forget,equity,club,plaza,ignore,promotion,goldfish,pug,overlook,raise,ritz,turtle"
 puzzled = new_puzzle.split(',')
 
 predicted_answer = predict_answer(new_puzzle)

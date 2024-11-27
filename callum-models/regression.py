@@ -84,7 +84,7 @@ def predict_answer(puzzle):
 
 
 # Example usage
-new_puzzle = "attention,angle,meet,fantasy,coverage,lens,slack,love,exposure,perspective,teams,shutter,press,position,zoom,treasure"
+new_puzzle = "discount,bonus,animal,eloise,forget,equity,club,plaza,ignore,promotion,goldfish,pug,overlook,raise,ritz,turtle"
 puzzled = new_puzzle.split(',')
 
 predicted_answer = predict_answer(new_puzzle)
