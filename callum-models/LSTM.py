@@ -8,6 +8,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 import string
 
+from connections_evaluator import ConnectionsEvaluator
+
 # Load Word2Vec model
 model_path = 'GoogleNews-vectors-negative300.bin'  # Update this path
 word_vectors = KeyedVectors.load_word2vec_format(model_path, binary=True)
@@ -102,6 +104,9 @@ def predict_answer(puzzle):
 # Example usage
 new_puzzle = "discount,bonus,animal,eloise,forget,equity,club,plaza,ignore,promotion,goldfish,pug,overlook,raise,ritz,turtle"
 puzzled = new_puzzle.split(',')
+
+evaluatore = ConnectionsEvaluator(model)
+evaluatore.evaluate()
 
 predicted_answer = predict_answer(new_puzzle)
 print(f'Predicted answer: {predicted_answer}')
