@@ -122,7 +122,7 @@ def build_aggregate_connections_answers(input_file):
 
 def main():
     # Load the model
-    model_path = '../embeddings/custom-connections-word2vec-model-1-epoch.bin'  # Update this path
+    model_path = '../embeddings/custom-connections-word2vec-model-10-epoch.bin'  # Update this path
     word_vectors = load_model(model_path)
 
     # Load predefined list of words
