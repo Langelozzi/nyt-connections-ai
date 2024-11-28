@@ -8,7 +8,7 @@ import pandas as pd
 
 def load_model(model_path):
     print("Loading model... This may take a while.")
-    word_vectors = KeyedVectors.load_word2vec_format(model_path, binary=True)
+    word_vectors = KeyedVectors.load_word2vec_format(model_path, binary=True, unicode_errors='ignore')
     print("Model loaded successfully.")
     return word_vectors
 
@@ -25,7 +25,7 @@ def load_and_save_reduced_model_bin(model_path, reduced_model_path, top_n=500000
 
 def truncate_model():
     # Path to the full pretrained Word2Vec file
-    original_model_path = './embeddings/GoogleNews-vectors-negative300.bin'
+    original_model_path = '../embeddings/GoogleNews-vectors-negative300.bin'
 
     # Limit to the top N words (e.g., 500,000)
     N = 500000
@@ -109,7 +109,7 @@ def predictor(input_words: list[str], word_vectors) -> list[list[str]]:
 
 
 def build_aggregate_connections_answers(input_file):
-    output_file = "data/connection_answers_aggregate.csv"
+    output_file = "../data/connection_answers_aggregate.csv"
 
     df = pd.read_csv(input_file)
 
@@ -122,12 +122,12 @@ def build_aggregate_connections_answers(input_file):
 
 def main():
     # Load the model
-    model_path = './embeddings/GoogleNews-vectors-negative300-500000.bin'  # Update this path
+    model_path = '../embeddings/custom-connections-word2vec-model-1-epoch.bin'  # Update this path
     word_vectors = load_model(model_path)
 
     # Load predefined list of words
-    word_file = "words.txt"
-    words = load_words(word_file)
+    # word_file = "../words.txt"
+    # words = load_words(word_file)
 
     # Find and output the top sets of 4 closest words
     # top_sets = get_top_n_sets(words, word_vectors, top_n_sets=10, group_size=4)
@@ -135,8 +135,8 @@ def main():
     #     print(f"Set {i}: Words = {group}, Similarity Score = {score:.4f}")
 
     # Evaluate model
-    n = 500
-    connections_answers = pd.read_csv('data/connection_answers_aggregate.csv')
+    n = 157
+    connections_answers = pd.read_csv('../data/connection_answers_aggregate.csv')
     predictor_func = lambda word_input: predictor(word_input, word_vectors)
     evaluator = ConnectionsEvaluator(predictor_func)
     accuracy, connections_made = evaluator.evaluate(connections_answers[:n])
@@ -147,6 +147,6 @@ def main():
 if __name__ == "__main__":
     main()
     # model_path = "./embeddings/GoogleNews-vectors-negative300.bin"
-    # reduced_model_path = "./embeddings/GoogleNews-vectors-negative300-500000.bin"
-    # load_and_save_reduced_model_bin(model_path, reduced_model_path)
+    # reduced_model_path = "./embeddings/GoogleNews-vectors-negative300-1000000.bin"
+    # load_and_save_reduced_model_bin(model_path, reduced_model_path, 1000000)
 
