@@ -1,0 +1,64 @@
+
+
+
+FORCING GROUPS OF 4
+Clusters:
+Group 1: ['BELIEVE', 'TRUST', 'STAND', 'MOUNT']
+Group 2: ['BLUFF', 'SHOW', 'HANDLE', 'SHAM']
+Group 3: ['FRONT', 'BRACKET', 'FIFTH', 'BUY']
+Group 4: ['BASE', 'PINT', 'LITER', 'ACCEPT']
+
+Starting with more clusters!
+
+------------------------------------------------------------
+BERT!!!
+Clusters with Confidence Scores:
+Group 1:
+  Word: SHOW, Confidence: 0.7476
+  Word: HANDLE, Confidence: 0.7435
+  Word: FRONT, Confidence: 0.7550
+  Word: SHAM, Confidence: 0.8248
+Group 2:
+  Word: PINT, Confidence: 0.8248
+  Word: BELIEVE, Confidence: 0.7335
+  Word: ACCEPT, Confidence: 0.7583
+  Word: TRUST, Confidence: 0.7351
+Group 3:
+  Word: BUY, Confidence: 0.7312
+  Word: MOUNT, Confidence: 0.8450
+  Word: BRACKET, Confidence: 0.8450
+  Word: BLUFF, Confidence: 1.0000
+Group 4:
+  Word: FIFTH, Confidence: 1.0000
+  Word: STAND, Confidence: 0.8382
+  Word: BASE, Confidence: 0.8382
+  Word: LITER, Confidence: 1.0000
+------------------------------------------------------------------------
+PCA BERT (NOT AS GOOD)
+Clusters with Confidence Scores:
+Group 1:
+  Word: HANDLE, Confidence: 0.7218
+  Word: FRONT, Confidence: 0.6842
+  Word: BELIEVE, Confidence: 0.6510
+  Word: BLUFF, Confidence: 0.5712
+Group 2:
+  Word: TRUST, Confidence: 0.6278
+  Word: FIFTH, Confidence: 0.6898
+  Word: LITER, Confidence: 0.7283
+  Word: MOUNT, Confidence: 0.7474
+Group 3:
+  Word: BRACKET, Confidence: 0.7613
+  Word: ACCEPT, Confidence: 0.7647
+  Word: BUY, Confidence: 0.7758
+  Word: SHAM, Confidence: 0.7435
+Group 4:
+  Word: PINT, Confidence: 0.7412
+  Word: STAND, Confidence: 0.7569
+  Word: BASE, Confidence: 0.7453
+  Word: SHOW, Confidence: 1.0000
+---------------------------------------------
+BERT Difference on all data
+
+Number of connections made: 186/2092
+Win percent: 0.57%
+

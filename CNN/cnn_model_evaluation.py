@@ -1,150 +1,143 @@
 import torch
-from connections_evaluator import ConnectionsEvaluator
-from gensim.models import KeyedVectors
 import pandas as pd
 import numpy as np
-from word_embeddings_model import load_words
+import ast
 
 
-# CNN predictor function
-def cnn_predictor(input_words: list[str], model, word_vectors, top_n=4) -> list[list[str]]:
-    valid_words = [word for word in input_words if word in word_vectors]
-    print(f"Valid words: {valid_words}")  # Debugging
+class CNNConnectionsEvaluator:
+    X_NAME = 'Puzzle'
+    Y_NAME = 'Answer'
 
-    if len(valid_words) < 4:
-        print("Not enough valid words in the vocabulary.")
-        return []
+    def __init__(self, cnn_model, word_vectors):
+        self.cnn_model = cnn_model
+        self.word_vectors = word_vectors
+        self.cnn_model.eval()
 
-    # Convert words to embeddings
-    embeddings = [word_vectors[word] for word in valid_words]
-    print(f"Number of embeddings: {len(embeddings)}")  # Debugging
+    def evaluate(self, test_set: pd.DataFrame) -> tuple[float, int]:
+        x, y = self.__split_x_y(test_set)
 
-    input_tensor = torch.tensor(embeddings, dtype=torch.float32).unsqueeze(0)
-    print(f"Input tensor shape: {input_tensor.shape}")  # Debugging
+        results = []
+        total_connections_made = 0
 
-    # Run the model
-    model.eval()
-    with torch.no_grad():
-        output = model(input_tensor)
-    print(f"Model output shape: {output.shape}")  # Debugging
-    print(f"Model output: {output}")  # Debugging
+        for input_words, output_words in zip(x, y):
+            formatted_input = self.__csv_input_to_list(input_words)
+            actual_output = self.__csv_output_to_list(output_words)
 
-    # Extract probabilities for groupings
-    group_scores = output.squeeze().cpu().numpy()
-    print(f"Group scores: {group_scores}")  # Debugging
+            mistakes_left, answers_missed = self.evaluate_puzzle(formatted_input, actual_output)
+            num_connections_made = 4 - len(answers_missed)
+            total_connections_made += num_connections_made
+            is_correct = mistakes_left > 0
 
-    valid_indices = len(valid_words)
-    group_scores = group_scores.reshape(valid_indices, 4)  # Reshape to match [words, groups]
-    ranked_indices = np.dstack(np.unravel_index(np.argsort(group_scores.ravel())[::-1], group_scores.shape))
-    ranked_indices = ranked_indices.squeeze(0)  # Reshape to match usable indices
+            results.append(is_correct)
 
-    print(f"Distribution of group scores:\nMin: {group_scores.min()}, Max: {group_scores.max()}")
+        prediction_rate = sum(results) / len(results)
+        return prediction_rate, total_connections_made
 
-    print(f"Ranked indices: {ranked_indices}")  # Debugging
+    def evaluate_puzzle(self, input_words: list[str], actual_outputs: list[list[str]]) -> tuple[int, list[list[str]]]:
+        mistakes_left = 4
+        answers_left = actual_outputs
 
-    # Convert to groups
-    predicted_groups = []
-    for i in range(0, len(ranked_indices), 4):
-        group_indices = ranked_indices[i:i + 4]
-        group_indices = [idx for idx in group_indices if idx[0] < len(valid_words)]  # Check word indices only
-        if len(group_indices) < 4:
-            continue
-        group_words = [valid_words[idx[0]] for idx in group_indices]
-        predicted_groups.append(group_words)
+        # Shuffle input words
+        import random
+        shuffled_words = input_words[:]
+        random.shuffle(shuffled_words)
+        print(f"Shuffled Words: {shuffled_words}")  # Debug shuffled order
 
-    print(f"Predicted groups: {predicted_groups}")  # Debugging
-    return predicted_groups
+        while mistakes_left > 0 and len(answers_left) > 0:
+            predictions = self.predict_with_cnn(shuffled_words)
 
+            for prediction in predictions:
+                correct = CNNConnectionsEvaluator.__prediction_is_in_answer(prediction, answers_left)
+                CNNConnectionsEvaluator.__print_game_status(prediction, correct, answers_left, mistakes_left)
 
+                if not correct:
+                    mistakes_left -= 1
+                    if mistakes_left <= 0:
+                        break
+                else:
+                    answers_left = CNNConnectionsEvaluator.__remove_sublist(answers_left, prediction)
+                    shuffled_words = [word for word in shuffled_words if word not in prediction]
+                    break
+        return mistakes_left, answers_left
 
-def run_cnn_on_words(word_file: str, model_path: str, cnn_model_path: str):
-    """
-    Finds top sets of 4 words using CNN on the provided word list.
-    """
-    # Load word embeddings
-    print("Loading word embeddings...")
-    word_vectors = KeyedVectors.load_word2vec_format(model_path, binary=True)
-    print("Word embeddings loaded successfully.")
+    def pad_inputs(self, input_words, word_vectors, max_length=16):
+        """Pads or truncates the input words to ensure a consistent length."""
+        embeddings = [
+            word_vectors[word] if word in word_vectors else np.zeros(word_vectors.vector_size)
+            for word in input_words
+        ]
+        while len(embeddings) < max_length:  # Pad with zeros
+            embeddings.append(np.zeros(word_vectors.vector_size))
+        return embeddings[:max_length]  # Trim if necessary
 
-    # Load words
-    words = load_words(word_file)
+    def predict_with_cnn(self, input_words: list[str]) -> list[list[str]]:
+        # Pad inputs to ensure consistent length
+        embeddings = self.pad_inputs(input_words, self.word_vectors)  # Use padded inputs
+        embeddings = torch.tensor(np.array(embeddings), dtype=torch.float32).unsqueeze(0)
 
-    # Load CNN model
-    print("Loading CNN model...")
-    cnn_model = torch.load(cnn_model_path, map_location=torch.device('cpu'))
-    cnn_model.eval()
-    print("CNN model loaded successfully.")
+        # Get predictions from the model
+        with torch.no_grad():
+            outputs = self.cnn_model(embeddings)  # Shape: [1, 16, 4]
+            print(f"Outputs: {outputs}")  # Debugging outputs
 
-    # Run CNN predictor
-    print("Predicting groups...")
-    top_sets = cnn_predictor(words, cnn_model, word_vectors, top_n=10)
+        # Extract probabilities for groupings
+        group_scores = outputs.squeeze(0).sum(dim=0).tolist()  # Sum probabilities for each group
+        print(f"Group Probabilities: {group_scores}")  # Debugging group probabilities
 
-    for i, group in enumerate(top_sets, 1):
-        print(f"Set {i}: Words = {group}")
+        # Rank groups by their aggregate probabilities
+        ranked_groups = sorted(enumerate(group_scores), key=lambda x: x[1], reverse=True)
 
+        # Create groups based on top probabilities
+        predictions = [[] for _ in range(4)]  # Initialize empty groups
+        for word_idx, word in enumerate(input_words):
+            word_probabilities = outputs[0, word_idx].tolist()
+            # top_group = max(range(4), key=lambda g: word_probabilities[g])  # Find group with max probability
+            top_group = np.argmax(word_probabilities)
+            predictions[top_group].append(word)  # Add word to predicted group
 
-def run_cnn_on_evaluator(test_data_path: str, model_path: str, cnn_model_path: str, num_games: int = 10):
-    """
-    Evaluates CNN model using ConnectionsEvaluator on the given dataset.
-    """
-    # Load word embeddings
-    print("Loading word embeddings...")
-    word_vectors = KeyedVectors.load_word2vec_format(model_path, binary=True)
-    print("Word embeddings loaded successfully.")
+        # Filter out empty groups
+        filtered_predictions = [group for group in predictions if group]
+        print(f"Predicted Groups: {filtered_predictions}")  # Debugging predicted groups
+        return filtered_predictions
 
-    # Load CNN model
-    print("Loading CNN model...")
-    cnn_model = torch.load(cnn_model_path)
-    cnn_model.eval()
-    print("CNN model loaded successfully.")
+    def __split_x_y(self, df: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
+        return df[self.X_NAME], df[self.Y_NAME]
 
-    # Define predictor function
-    predictor_func = lambda input_words: cnn_predictor(input_words, cnn_model, word_vectors)
+    @staticmethod
+    def __print_game_status(prediction, correct, answers_left, mistakes_left):
+        print('----------------------------------')
+        print(f'Mistakes left: {mistakes_left}')
+        print(f'Answers left: {answers_left}')
+        print(f'Current prediction: {prediction}')
+        print(f'Is prediction correct: {correct}')
+        print('----------------------------------')
 
-    # Create evaluator
-    evaluator = ConnectionsEvaluator(predictor_func)
+    @staticmethod
+    def __csv_input_to_list(value: str) -> list[str]:
+        return value.lower().split(', ')
 
-    # Load test data
-    print("Loading test dataset...")
-    test_data = pd.read_csv(test_data_path)
-    print("Test dataset loaded successfully.")
+    @staticmethod
+    def __csv_output_to_list(value: str) -> list[list[str]]:
+        return [
+            [s.strip().lower() for s in group.split(", ")]
+            for group in ast.literal_eval(value)
+        ]
 
-    # Evaluate model
-    print("Evaluating model...")
-    accuracy, total_connections_made = evaluator.evaluate(test_data[:num_games])
-    print(f"Number of connections made: {total_connections_made}/{4 * num_games}")
-    print(f"Win percent: {accuracy * 100:.2f}%")
+    @staticmethod
+    def __normalize_list(lst: list[str]) -> tuple[str, ...]:
+        return tuple(sorted(s.lower() for s in lst))
 
+    @staticmethod
+    def __prediction_is_in_answer(prediction: list[str], answers: list[list[str]]):
+        normalized_pred = CNNConnectionsEvaluator.__normalize_list(prediction)
+        normalized_answers_set = {CNNConnectionsEvaluator.__normalize_list(sublist) for sublist in answers}
+        return normalized_pred in normalized_answers_set
 
-def main():
-    """
-    Main method for selecting and running the desired functionality.
-    """
-    # Paths to resources
-    word_file = "../words.txt"
-    test_data_path = "../data/connection_answers_aggregate.csv"
-    model_path = '../GoogleNews-vectors-negative300.bin'
-    cnn_model_path = "cnn_model.pth"
-
-    # User input to select functionality
-    # print("Select mode of operation:")
-    # print("1. Run CNN on words (words.txt)")
-    # print("2. Evaluate CNN using ConnectionsEvaluator")
-    # mode = input("Enter your choice (1/2): ").strip()
-
-    run_cnn_on_words(word_file, model_path, cnn_model_path)
-
-
-    # if mode == "1":
-    #     print("\nRunning CNN on words...")
-    #     run_cnn_on_words(word_file, model_path, cnn_model_path)
-    # elif mode == "2":
-    #     num_games = int(input("\nEnter number of games to evaluate: "))
-    #     print("\nRunning CNN evaluation...")
-    #     run_cnn_on_evaluator(test_data_path, model_path, cnn_model_path, num_games)
-    # else:
-    #     print("Invalid choice. Please select either 1 or 2.")
-
-
-if __name__ == "__main__":
-    main()
+    @staticmethod
+    def __remove_sublist(list_of_lists: list[list[str]], sublist: list[str]) -> list[list[str]]:
+        normalized_target = CNNConnectionsEvaluator.__normalize_list(sublist)
+        filtered_list = [
+            sublist for sublist in list_of_lists
+            if CNNConnectionsEvaluator.__normalize_list(sublist) != normalized_target
+        ]
+        return filtered_list
