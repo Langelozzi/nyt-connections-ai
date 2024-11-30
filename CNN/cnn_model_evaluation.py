@@ -3,7 +3,7 @@ from connections_evaluator import ConnectionsEvaluator
 from gensim.models import KeyedVectors
 import pandas as pd
 import numpy as np
-from word_embeddings_model import load_words
+from word_embeddings.word_embeddings_model import load_words
 
 
 # CNN predictor function
