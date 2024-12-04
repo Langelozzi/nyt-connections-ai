@@ -129,7 +129,7 @@ def main():
     # Load dataset
     data_path = "../data/connection_answers_aggregate.csv"
     connections_answers = pd.read_csv(data_path)
-    connections_answers = connections_answers[:522]
+    connections_answers = connections_answers[400:420]
 
     # Path to pre-trained Google News Word2Vec embeddings
     model_path = "../GoogleNews-vectors-negative300.bin"
