@@ -26,7 +26,7 @@ def compute_phrase_embedding(phrase, word_vectors, fallback_embedding):
         if word in word_vectors:
             embeddings.append(word_vectors[word])  # Use Word2Vec embedding
         else:
-            print(f"Word '{word}' not found in Word2Vec. Using fallback embedding.")
+            # print(f"Word '{word}' not found in Word2Vec. Using fallback embedding.")
             embeddings.append(fallback_embedding)  # Use fallback for OOV words
 
     # Return the average embedding for the phrase
@@ -82,16 +82,16 @@ def word2vec_agglomerative_predictor(input_words: list[str], word_vectors, metri
         elif "-" in word:  # Handle hyphenated words
             hyphen_removed = word.replace("-", "")
             if hyphen_removed in word_vectors:
-                print(f"Word '{word}' not found. Using hyphen-removed version: '{hyphen_removed}'.")
+                # print(f"Word '{word}' not found. Using hyphen-removed version: '{hyphen_removed}'.")
                 embeddings.append(word_vectors[hyphen_removed])
             else:
-                print(f"Hyphen-removed word '{hyphen_removed}' not found. Using fallback embedding.")
+                # print(f"Hyphen-removed word '{hyphen_removed}' not found. Using fallback embedding.")
                 embeddings.append(average_embedding)
         elif " " in word:  # If the word is a phrase
-            print(f"Phrase '{word}' not found in embeddings, computing phrase embedding.")
+            # print(f"Phrase '{word}' not found in embeddings, computing phrase embedding.")
             embeddings.append(compute_phrase_embedding(word, word_vectors, average_embedding))
         else:
-            print(f"Word '{word}' not found in embeddings, assigning average embedding.")
+            # print(f"Word '{word}' not found in embeddings, assigning average embedding.")
             embeddings.append(average_embedding)
         valid_words.append(word)
 
