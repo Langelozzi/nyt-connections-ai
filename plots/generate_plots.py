@@ -86,9 +86,9 @@ def compare_models(model_results: list[dict]):
 
 def main():
     # Comparing different influence of training data on existing word embeddings
-    epochs = [1, 3, 5, 7, 9, 10, 11, 12, 15, 20]
-    epochs_vs_win_percentage(epochs)
-    epochs_vs_total_connections_accuracy(epochs)
+        # epochs = [1, 3, 5, 7, 9, 10, 11, 12, 15, 20]
+        # epochs_vs_win_percentage(epochs)
+        # epochs_vs_total_connections_accuracy(epochs)
 
     # Comparing different models
     model_performance = [
@@ -121,6 +121,36 @@ def main():
             'model_name': 'Google Word Embedding 1M + 10 Epoch Training',
             'win_percentage': 0.095,
             'connection_accuracy': 0.215
+        },
+        {
+            'model_name': 'CNN: 3M Google Word Embedding Trained on Archive',
+            'win_percentage': 0.00,
+            'connection_accuracy': 0.02,
+        },
+        {
+            'model_name': 'Agglomerative Clustering (cosine, single) + Pre-Trained BERT',
+            'win_percentage': 0.1311,
+            'connection_accuracy': 0.401
+        },
+        {
+            'model_name': 'Agglomerative Clustering (cosine, single) + Google Word Embedding 3M',
+            'win_percentage': 0.1858,
+            'connection_accuracy': 0.4057
+        },
+        {
+            'model_name': 'Agglomerative Clustering (cosine, single) + Google Word Embedding 3M + Phrase Cleaning',
+            'win_percentage': 0.2203,
+            'connection_accuracy': 0.4641
+        },
+        {
+            'model_name': 'Fuzzy Means Clustering + Google Word Embedding 3M + Phrase Cleaning',
+            'win_percentage': 0.1686,
+            'connection_accuracy': 0.3113
+        },
+        {
+            'model_name': 'Medoid Clustering + Google Word Embedding 3M + Phrase Cleaning',
+            'win_percentage': 0.0709,
+            'connection_accuracy': 0.2146
         },
     ]
     compare_models(model_performance)
