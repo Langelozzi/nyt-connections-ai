@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import random
 from gensim.models import KeyedVectors
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.preprocessing import normalize
@@ -131,7 +130,7 @@ def main():
     # Load dataset
     data_path = "../data/connection_answers_aggregate.csv"
     connections_answers = pd.read_csv(data_path)
-    connections_answers = connections_answers[:520]
+    connections_answers = connections_answers[400:425]
 
     # Path to pre-trained Google News Word2Vec embeddings
     model_path = "../GoogleNews-vectors-negative300.bin"
@@ -146,19 +145,6 @@ def main():
     linkage = 'single'  # Specify the linkage you want to use
 
     print(f"Evaluating with metric='{metric}' and linkage='{linkage}'")
-
-
-    # # Try something new
-    # # Shuffle input words for each puzzle
-    # def shuffle_puzzle_inputs(test_set: pd.DataFrame):
-    #     shuffled_puzzles = test_set.copy()
-    #     for idx in shuffled_puzzles.index:
-    #         puzzle_words = shuffled_puzzles.loc[idx, 'Puzzle'].split(", ")
-    #         random.shuffle(puzzle_words)  # Shuffle the words
-    #         shuffled_puzzles.loc[idx, 'Puzzle'] = ", ".join(puzzle_words)  # Update the shuffled puzzle
-    #     return shuffled_puzzles
-    #
-    # shuffled_connections_answers = shuffle_puzzle_inputs(connections_answers)
 
     # Define predictor function with the loaded Word2Vec model
     def predictor_func(input_words):

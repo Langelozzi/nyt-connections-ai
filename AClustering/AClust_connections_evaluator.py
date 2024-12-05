@@ -1,5 +1,6 @@
 import pandas as pd
 import ast
+import random
 from typing import Callable
 
 class ConnectionsEvaluator:
@@ -36,14 +37,17 @@ class ConnectionsEvaluator:
 
     def evaluate_puzzle(self, input_words: list[str], actual_outputs: list[list[str]]) -> tuple[int, list[list[str]]]:
         mistakes_left = 4
-        inputs_left = input_words
+        randomized_inputs = input_words.copy()
+        random.shuffle(randomized_inputs)  # Shuffle the input words
+        inputs_left = randomized_inputs
+        # inputs_left = input_words
         answers_left = actual_outputs
         while mistakes_left > 0 and len(answers_left) > 0:
             predictions = self._predictor_func(inputs_left)
-            # print(inputs_left)
+            print(inputs_left)
             for prediction in predictions:
                 correct = ConnectionsEvaluator.__prediction_is_in_answer(prediction, answers_left)
-                # ConnectionsEvaluator.__print_game_status(prediction, correct, answers_left, mistakes_left)
+                ConnectionsEvaluator.__print_game_status(prediction, correct, answers_left, mistakes_left)
                 if not correct:
                     mistakes_left -= 1
                     continue
